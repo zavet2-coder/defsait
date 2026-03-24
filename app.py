@@ -1,14 +1,19 @@
 import sqlite3
 import requests
-from flask import Flask, render_template, request, jsonify
 import os
+from fastapi import FastAPI, Form, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-app = Flask(__name__)
-app.secret_key = 'psixogen_secret_key_999'
+app = FastAPI()
 
+# Конфиг ТГ
 TELEGRAM_TOKEN = "8747524473:AAG20LH6Pdkw0DwOg0OHj0tNhqQO4fEpy7Q"
 CHAT_ID = "6915077397"
 
+# Подключаем шаблоны (твои HTML файлы должны лежать в папке templates)
+templates = Jinja2Templates(directory="templates")
 
 def init_db():
     conn = sqlite3.connect('defense.db')
@@ -22,48 +27,48 @@ def init_db():
     conn.commit()
     conn.close()
 
-
-def send_telegram_msg(d):
+def send_telegram_msg(contact, plan, txid):
     text = (f"🛡️ **PSIXOGEN: NEW ORDER**\n"
             f"━━━━━━━━━━━━━━━\n"
-            f"📱 **TG:** {d['contact']}\n"
-            f"💎 **PLAN:** {d['plan']}\n"
-            f"🔗 **DATA/TXID:** {d['txid']}\n"
+            f"📱 **TG:** {contact}\n"
+            f"💎 **PLAN:** {plan}\n"
+            f"🔗 **DATA/TXID:** {txid}\n"
             f"━━━━━━━━━━━━━━━")
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     try:
         requests.post(url, data={"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"})
     except Exception as e:
-        print(f"Ошибка сети: {e}")
+        print(f"Ошибка сети ТГ: {e}")
 
+@app.on_event("startup")
+def startup_event():
+    init_db()
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        data = {
-            'contact': request.form.get('contact'),
-            'plan': request.form.get('plan'),
-            'txid': request.form.get('txid')
-        }
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
-        # Шлем в ТГ
-        send_telegram_msg(data)
+@app.post("/order")
+async def create_order(
+    contact: str = Form(...),
+    plan: str = Form(...),
+    txid: str = Form(...)
+):
+    # Шлем в ТГ
+    send_telegram_msg(contact, plan, txid)
 
-        # Сохраняем в базу
-        conn = sqlite3.connect('defense.db')
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO orders (contact, plan, txid) VALUES (?, ?, ?)",
-                       (data['contact'], data['plan'], data['txid']))
-        conn.commit()
-        conn.close()
+    # Сохраняем в базу
+    conn = sqlite3.connect('defense.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO orders (contact, plan, txid) VALUES (?, ?, ?)",
+                   (contact, plan, txid))
+    conn.commit()
+    conn.close()
 
-        return jsonify({"status": "success"}), 200
+    return JSONResponse(content={"status": "success"})
 
-    return render_template('index.html')
-
-
-if __name__ == '__main__':
-    # Railway передает порт в переменную окружения PORT
-    port = int(os.environ.get("PORT", 5000))
-    # host='0.0.0.0' открывает доступ извне
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    import uvicorn
+    # Берем порт из переменной окружения Railway
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
