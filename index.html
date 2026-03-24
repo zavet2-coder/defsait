@@ -221,19 +221,39 @@
         AOS.init({ duration: 1600, once: true });
         VanillaTilt.init(document.querySelectorAll(".plan-card"), { max: 7, speed: 500 });
 
-        // --- ЛОГИКА ФОРМЫ И АНТИСПАМА ---
+        // --- ЛОГИКА ОТПРАВКИ НА СЕРВЕР ---
         const form = document.getElementById('orderForm');
         const modal = document.getElementById('payment-modal');
         const mContent = document.querySelector('.modal-content');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (localStorage.getItem('sent_order')) {
-                openModal("ОТКАЗАНО", "Вы уже отправили заявку.");
-                return;
+
+            // Собираем данные из полей
+            const formData = new FormData(form);
+            const data = {
+                contact: formData.get('contact'),
+                plan: formData.get('plan'),
+                txid: formData.get('txid')
+            };
+
+            try {
+                // Шлем данные на твой Python сервер (путь /order)
+                const response = await fetch('/order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    openModal("УСПЕШНО", "Заявка принята! Мы проверим транзакцию и свяжемся с вами.");
+                    form.reset();
+                } else {
+                    openModal("ОШИБКА", "Сервер не смог обработать заявку.");
+                }
+            } catch (error) {
+                openModal("ОШИБКА СЕТИ", "Не удалось связаться с сервером.");
             }
-            localStorage.setItem('sent_order', 'true');
-            openModal("УСПЕШНО", "Заявка принята! Мы проверим транзакцию и свяжемся с вами.");
         });
 
         function openModal(title, msg) {
