@@ -6,6 +6,7 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
+# 1. База данных
 def init_db():
     conn = sqlite3.connect('defense.db')
     cursor = conn.cursor()
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# 2. Конфиг ТГ
 TELEGRAM_TOKEN = "8747524473:AAG20LH6Pdkw0DwOg0OHj0tNhqQO4fEpy7Q"
 CHAT_ID = "6915077397"
 templates = Jinja2Templates(directory="templates")
@@ -42,6 +44,7 @@ def send_telegram_msg(contact, plan, txid):
     except:
         pass
 
+# 3. Роуты
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -55,3 +58,11 @@ async def create_order(contact: str = Form(...), plan: str = Form(...), txid: st
     conn.commit()
     conn.close()
     return JSONResponse(content={"status": "success"})
+
+# 4. АВТО-ЗАПУСК (Сам подхватит порт Railway)
+if __name__ == "__main__":
+    import uvicorn
+    # Railway всегда передает порт в переменную окружения PORT
+    # Если её нет (локально), включится 8000
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
