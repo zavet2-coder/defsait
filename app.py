@@ -1,12 +1,14 @@
 import sqlite3
 import requests
 import os
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from flask import Flask, render_template, request, jsonify
 
-# 1. База данных
+app = Flask(__name__)
+
+# Данные твоего бота
+TELEGRAM_TOKEN = "8747524473:AAG20LH6Pdkw0DwOg0OHj0tNhqQO4fEpy7Q"
+CHAT_ID = "6915077397"
+
 def init_db():
     conn = sqlite3.connect('defense.db')
     cursor = conn.cursor()
@@ -18,18 +20,6 @@ def init_db():
     ''')
     conn.commit()
     conn.close()
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_db()
-    yield
-
-app = FastAPI(lifespan=lifespan)
-
-# 2. Конфиг ТГ
-TELEGRAM_TOKEN = "8747524473:AAG20LH6Pdkw0DwOg0OHj0tNhqQO4fEpy7Q"
-CHAT_ID = "6915077397"
-templates = Jinja2Templates(directory="templates")
 
 def send_telegram_msg(contact, plan, txid):
     text = (f"🛡️ **PSIXOGEN: NEW ORDER**\n"
@@ -44,25 +34,30 @@ def send_telegram_msg(contact, plan, txid):
     except:
         pass
 
-# 3. Роуты
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+@app.route('/')
+def index():
+    # Инициализируем базу при первом заходе, если её нет
+    init_db()
+    return render_template('index.html')
 
-@app.post("/order")
-async def create_order(contact: str = Form(...), plan: str = Form(...), txid: str = Form(...)):
+@app.route('/order', methods=['POST'])
+def create_order():
+    contact = request.form.get('contact')
+    plan = request.form.get('plan')
+    txid = request.form.get('txid')
+
     send_telegram_msg(contact, plan, txid)
+
     conn = sqlite3.connect('defense.db')
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO orders (contact, plan, txid) VALUES (?, ?, ?)", (contact, plan, txid))
+    cursor.execute("INSERT INTO orders (contact, plan, txid) VALUES (?, ?, ?)",
+                   (contact, plan, txid))
     conn.commit()
     conn.close()
-    return JSONResponse(content={"status": "success"})
 
-# 4. АВТО-ЗАПУСК (Сам подхватит порт Railway)
+    return jsonify({"status": "success"})
+
 if __name__ == "__main__":
-    import uvicorn
-    # Railway всегда передает порт в переменную окружения PORT
-    # Если её нет (локально), включится 8000
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Локальный запуск (Railway проигнорирует этот блок и запустит через Gunicorn)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
