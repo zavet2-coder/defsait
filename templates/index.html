@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSIXOGEN // Digital Deffing</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@200;300;400;600&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Мрачная, приглушенная палитра */
+            --primary: #b0b0b0; /* Глубокий серый */
+            --secondary: #1a1a1a; /* Матовый черный */
+            --accent: #ffffff; /* Чистый белый для контраста */
+            --bg: #000000; /* Глубокий черный */
+            --glass: rgba(255, 255, 255, 0.01);
+            --glass-border: rgba(255, 255, 255, 0.08); /* Чуть ярче для основы */
+            --da-gradient: linear-gradient(45deg, #111, #333);
+            --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+
+        /* --- 2) КОМПАКТНОСТЬ (МАСШТАБИРОВАНИЕ) --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        body { background: var(--bg); color: rgba(255,255,255,0.7); overflow-x: hidden; position: relative; min-height: 100vh; font-size: 0.9rem; } /* Уменьшил шрифт тела */
+
+        /* 1) Мягкий свет УБРАН */
+
+        h1, h2, h3, .logo { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); }
+
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -3; pointer-events: none; opacity: 0.3; }
+
+        /* Компактная Навигация */
+        nav {
+            position: fixed; width: 100%; padding: 12px 10%; /* Уменьшил паддинги */
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border);
+        }
+        .logo { font-size: 1.2rem; font-weight: 900; letter-spacing: 3px; color: var(--primary); text-decoration: none; } /* Уменьшил лого */
+        .logo span { color: var(--accent); opacity: 0.5; }
+
+        /* Компактный Hero */
+        .hero { height: 85vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 10%; position: relative; } /* Уменьшил высоту */
+        .hero h1 {
+            font-size: clamp(2.5rem, 10vw, 7rem); /* Уменьшил масштаб h1 */
+            letter-spacing: 15px; /* Уменьшил спейсинг */
+            margin-bottom: 8px; line-height: 1; font-weight: 900; color: transparent;
+            background-image: linear-gradient(-45deg, #333 0%, #111 25%, #fff 50%, #111 75%, #333 100%);
+            background-size: 400% 100%; -webkit-background-clip: text; background-clip: text;
+            animation: liquidMetal 15s infinite linear; position: relative;
+        }
+        @keyframes liquidMetal { 0% { background-position: 0% 50%; } 100% { background-position: 400% 50%; } }
+
+        .hero .kinetic-p { max-width: 100%; margin-bottom: 40px; font-size: 0.85rem; font-weight: 200; letter-spacing: 2px; color: rgba(255,255,255,0.3); white-space: nowrap; overflow: hidden; position: relative; } /* Уменьшил текст и маргин */
+        .hero .kinetic-p span { display: inline-block; animation: marquee 25s infinite linear; padding-left: 100%; }
+        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+
+        /* Компактная Сетка Тарифов */
+        .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 0 10% 80px; position: relative; z-index: 10; perspective: 2000px; } /* Уменьшил minmax, gap, padding */
+        .plan-card {
+            background: var(--glass); backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 30px; padding: 50px 30px; /* Уменьшил радиус и паддинг */
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            transform-style: preserve-3d; transition: all 0.6s var(--ease-out-cubic); cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .plan-card::after { /* Эффект блика на границе */
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transition: 0.8s;
+        }
+        .plan-card:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,255,255,0.02);
+        }
+        .plan-card:hover::after { left: 200%; }
+
+        .plan-card h3 { font-size: 1.1rem; margin-bottom: 20px; transform: translateZ(30px); color: rgba(255,255,255,0.9); } /* Уменьшил текст */
+
+        /* Свечение цены (сохранил) */
+        .plan-card .price {
+            font-size: 3.5rem; font-weight: 900; margin-bottom: 25px; /* Уменьшил размер */
+            transform: translateZ(60px); color: #fff;
+            text-shadow: 0 0 20px rgba(255,255,255,0.1);
+            transition: all 0.5s var(--ease-out-cubic);
+        }
+        .plan-card:hover .price {
+            transform: translateZ(80px) scale(1.05); /* Уменьшил наклон */
+            text-shadow: 0 0 25px rgba(255,255,255,0.8), 0 0 50px rgba(255,255,255,0.2);
+            color: #ffffff;
+        }
+
+        .plan-card p { opacity: 0.3; font-weight: 300; margin-bottom: 35px; transform: translateZ(25px); font-size: 0.9rem; } /* Уменьшил текст и маргин */
+        .plan-card .card-btn { transform: translateZ(40px); width: 100%; transition: 0.4s var(--ease-out-cubic); }
+
+        /* Компактные Кнопки */
+        .btn { display: inline-block; padding: 14px 35px; background: transparent; color: #fff; text-decoration: none; border-radius: 40px; font-weight: 700; border: 1px solid var(--glass-border); cursor: pointer; transition: 0.5s var(--ease-out-cubic); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; } /* Уменьшил паддинг, радиус, шрифт */
+        .btn-primary { background: var(--secondary); border: 1px solid transparent; font-weight: 800; color: var(--primary); }
+        .btn-primary:hover { background: transparent; color: #fff; border-color: #fff; transform: translateY(-2px); }
+
+        .da-btn { display: block; width: 100%; padding: 18px; text-align: center; border-radius: 14px; text-decoration: none; font-weight: 800; font-size: 1rem; color: #fff; background: var(--da-gradient); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); margin-bottom: 12px; transition: 0.5s var(--ease-out-cubic); border: 1px solid rgba(255,255,255,0.1); } /* Уменьшил паддинг, радиус, шрифт */
+
+        /* Компактная Форма активации */
+        .activation { padding: 80px 10%; max-width: 850px; margin: 0 auto; position: relative; z-index: 10; } /* Уменьшил паддинги и ширину */
+        .glass-form { background: rgba(255, 255, 255, 0.005); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 35px; padding: 60px; } /* Уменьшил радиус и паддинг */
+
+        input, select { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid var(--glass-border); background: #0a0a0a; color: white; font-size: 0.9rem; margin-bottom: 20px; transition: 0.5s var(--ease-out-cubic); appearance: none; } /* Уменьшил паддинг, радиус, шрифт */
+        select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; background-size: 12px; } /* Поправил стрелку */
+        .form-label { font-size: 0.8rem; opacity: 0.6; margin-left: 8px; margin-bottom: 6px; font-weight: 300; display: block; } /* Уменьшил шрифт и маргин */
+
+        .submit-btn { width: 100%; padding: 18px; background: var(--secondary); color: var(--primary); border: 1px solid transparent; border-radius: 14px; font-weight: 900; font-size: 1rem; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.5s var(--ease-out-cubic); } /* Уменьшил паддинг, радиус, шрифт */
+        .submit-btn:hover { background: transparent; color: #fff; border-color: #fff; transform: scale(1.01); }
+
+        #payment-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .modal-content { background: #080808; border: 1px solid var(--glass-border); padding: 40px; border-radius: 25px; text-align: center; max-width: 450px; transform: scale(0.9); transition: 0.3s; } /* Уменьшил паддинг и радиус */
+        .modal-content.active { transform: scale(1); }
+
+        .wallet-addr { background: rgba(0,0,0,0.8); padding: 16px; border-radius: 10px; font-family: monospace; font-size: 0.9rem; color: #666; border: 1px solid var(--glass-border); margin-top: 12px; text-align: center; } /* Уменьшил паддинг, радиус, шрифт */
+
+        /* Компактный Копирайт (Титул) */
+        footer { padding: 80px 10% 40px; text-align: center; position: relative; z-index: 10; } /* Уменьшил паддинг */
+        .footer-line { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, var(--glass-border), transparent); margin-bottom: 30px; } /* Уменьшил маргин */
+        .footer-content { display: flex; flex-direction: column; align-items: center; gap: 12px; } /* Уменьшил гэп */
+        .footer-logo { font-family: 'Orbitron', sans-serif; font-size: 1rem; letter-spacing: 8px; opacity: 0.2; } /* Уменьшил лого */
+        .footer-credits { font-size: 0.7rem; color: rgba(255,255,255,0.2); letter-spacing: 2px; text-transform: uppercase; } /* Уменьшил шрифт */
+        .footer-credits span { color: rgba(255,255,255,0.5); }
+
+        @media (max-width: 768px) { .hero h1 { font-size: 3rem; } .glass-form { padding: 30px; } .activation { padding: 60px 10%; } }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="payment-modal">
+        <div class="modal-content">
+            <h2 id="modal-title" style="margin-bottom: 20px;">ПРИНЯТО</h2>
+            <p id="modal-msg" style="opacity: 0.6; margin-bottom: 20px; line-height: 1.6;">Ваша заявка на активацию отправлена.</p>
+            <p style="font-size: 0.9rem; color: var(--primary); margin-bottom: 30px;">Поддержка: <span style="color: #fff;">@Iouhh_def</span></p>
+            <button onclick="closeModal()" class="submit-btn" style="width: auto; padding: 15px 40px;">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+
+    <nav>
+        <a href="#" class="logo">PSIXOGEN<span>.DEF</span></a>
+    </nav>
+
+    <header class="hero">
+        <h1 data-aos="fade-up">PSIXOGEN</h1>
+        <p class="kinetic-p" data-aos="fade-up" data-aos-delay="200">
+            <span>// Тотальный контроль приватности // Защита от докса и свата // Бескомпромиссная защита вашей личности // Professional Grade //</span>
+        </p>
+        <div data-aos="fade-up" data-aos-delay="400">
+            <a href="#plans" class="btn btn-primary">Услуги</a>
+        </div>
+    </header>
+
+    <section class="plans-grid" id="plans">
+        <div class="plan-card glass-card" data-aos="fade-up" data-tilt>
+            <h3>MONTHLY</h3><div class="price">5$</div><p>30 дней полной защиты</p><a href="#order" class="btn card-btn">ВЫБРАТЬ</a>
+        </div>
+        <div class="plan-card glass-card" data-aos="fade-up" data-aos-delay="150" data-tilt>
+            <h3>QUARTERLY</h3><div class="price">7$</div><p>90 дней полной защиты</p><a href="#order" class="btn card-btn">ВЫБРАТЬ</a>
+        </div>
+        <div class="plan-card glass-card" data-aos="fade-up" data-aos-delay="300" data-tilt>
+            <h3>LIFETIME</h3><div class="price">10$</div><p>Вечный доступ к дефу</p><a href="#order" class="btn card-btn">ВЫБРАТЬ</a>
+        </div>
+    </section>
+
+    <section class="activation" id="order">
+        <div class="glass-form" data-aos="zoom-in">
+            <h2 style="margin-bottom: 8px; font-size: 2rem; text-align: center;">ОПЛАТА</h2>
+            <p style="opacity: 0.2; margin-bottom: 35px; text-align: center; font-weight: 300;">Выберите удобный шлюз активации:</p>
+
+            <a href="https://www.donationalerts.com/r/iouhh_def" target="_blank" class="da-btn">ОПЛАТИТЬ ПО СБП / КАРТОЙ</a>
+
+            <div style="margin: 30px 0; border-top: 1px solid var(--glass-border); padding-top: 30px;">
+                <p style="font-size: 0.8rem; margin-bottom: 12px; opacity: 0.3; text-align: center; font-weight: 300;">Криптовалюта (USDT TRC20):</p>
+                <div class="wallet-addr">TGrtRCizSghyrp8pjZsMb5pc31v9JsRfyF</div>
+            </div>
+
+            <form id="orderForm" style="margin-top: 40px;">
+                <label class="form-label">Telegram:</label>
+                <input type="text" name="contact" placeholder="@username" required>
+
+                <label class="form-label">Тариф:</label>
+                <select name="plan">
+                    <option value="30 DAYS — 5$">30 DAYS — 5$</option>
+                    <option value="90 DAYS — 7$">90 DAYS — 7$</option>
+                    <option value="LIFETIME — 10$">LIFETIME — 10$</option>
+                </select>
+
+                <label class="form-label">DATA / TXID:</label>
+                <input type="text" name="txid" placeholder="Ник из доната или хеш транзакции" required>
+
+                <p style="font-size: 0.75rem; opacity: 0.3; margin-bottom: 15px; text-align: center;">Support: @Iouhh_def</p>
+                <button type="submit" class="submit-btn">ПОДТВЕРДИТЬ</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-line"></div>
+        <div class="footer-content">
+            <div class="footer-logo">PSIXOGEN</div>
+            <div class="footer-credits">Developed by <span>7ouh</span> // Secure Infrastructure by <span>Iouhh_def</span></div>
+            <div style="opacity: 0.1; font-size: 0.6rem; letter-spacing: 4px;">NO TRACE LEFT // © 2026</div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.2/vanilla-tilt.min.js"></script>
+
+    <script>
+        AOS.init({ duration: 1600, once: true });
+        VanillaTilt.init(document.querySelectorAll(".plan-card"), { max: 7, speed: 500 });
+
+        // --- ЛОГИКА ФОРМЫ И АНТИСПАМА ---
+        const form = document.getElementById('orderForm');
+        const modal = document.getElementById('payment-modal');
+        const mContent = document.querySelector('.modal-content');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (localStorage.getItem('sent_order')) {
+                openModal("ОТКАЗАНО", "Вы уже отправили заявку.");
+                return;
+            }
+            localStorage.setItem('sent_order', 'true');
+            openModal("УСПЕШНО", "Заявка принята! Мы проверим транзакцию и свяжемся с вами.");
+        });
+
+        function openModal(title, msg) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            modal.style.display = 'flex';
+            setTimeout(() => mContent.classList.add('active'), 10);
+        }
+
+        function closeModal() {
+            mContent.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        // --- BACKGROUND CANVAS (STARS) (ОСТАВИЛ БЕЗ ИЗМЕНЕНИЙ) ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let width, height;
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+        class Particle {
+            constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = (Math.random() - 0.5) * 0.15; this.vy = (Math.random() - 0.5) * 0.15; this.radius = Math.random() * 1; }
+            update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1; }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = 'rgba(100, 100, 100, 0.4)'; ctx.fill(); }
+        }
+        for (let i = 0; i < 60; i++) particles.push(new Particle());
+        function loop() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i]; p.update(); p.draw();
+                for (let j = i + 1; j < particles.length; j++) {
+                    let p2 = particles[j]; let dx = p.x - p2.x; let dy = p.y - p2.y; let dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 180) { ctx.beginPath(); ctx.strokeStyle = `rgba(100, 100, 100, ${0.1 * (1 - dist/180)})`; ctx.lineWidth = 0.4; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>
