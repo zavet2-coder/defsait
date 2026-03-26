@@ -3,12 +3,16 @@ import socketserver
 import os
 import json
 import requests
+import time
 
-# Конфиг ТГ
-TELEGRAM_TOKEN = "8747524473:AAG20LH6Pdkw0DwOg0OHj0tNhqQO4fEpy7Q"
-CHAT_ID = "6915077397"
+# env config
+T_TOKEN = os.environ.get("TELEGRAM_TOKEN")
+C_ID = os.environ.get("CHAT_ID")
 
-class MyHandler(http.server.SimpleHTTPRequestHandler):
+# flood control
+cache = {}
+
+class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/':
             self.path = '/index.html'
@@ -16,35 +20,55 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         if self.path == '/order':
-            # Читаем JSON от браузера
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data)
+            # ip filter
+            ip = self.headers.get('x-forwarded-for', self.client_address[0])
+            if ip in cache:
+                self.send_response(429)
+                self.end_headers()
+                return
 
-            contact = data.get('contact', 'Не указан')
-            plan = data.get('plan', 'Не выбран')
-            txid = data.get('txid', 'Нет данных')
+            try:
+                l = int(self.headers['Content-Length'])
+                raw = self.rfile.read(l)
+                d = json.loads(raw)
 
-            # Формируем текст
-            text = (f"🛡️ **PSIXOGEN: NEW ORDER**\n"
-                    f"━━━━━━━━━━━━━━━\n"
-                    f"📱 **TG:** {contact}\n"
-                    f"💎 **PLAN:** {plan}\n"
-                    f"🔗 **DATA/TXID:** {txid}\n"
-                    f"━━━━━━━━━━━━━━━")
+                u = d.get('contact', '-')
+                p = d.get('plan', '-')
+                t = d.get('txid', '-')
 
-            # Отправляем в ТГ
-            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-            requests.post(url, json={"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"})
+                if u == '-' or t == '-':
+                    self.send_response(400)
+                    self.end_headers()
+                    return
 
-            # Отвечаем браузеру
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "success"}).encode())
+                # log request
+                cache[ip] = time.time()
+
+                # tg msg build
+                txt = (f"🛡️ **PSIXOGEN: NEW ORDER**\n"
+                       f"━━━━━━━━━━━━━━━\n"
+                       f"📱 **TG:** {u}\n"
+                       f"💎 **PLAN:** {p}\n"
+                       f"🔗 **DATA/TXID:** {t}\n"
+                       f"━━━━━━━━━━━━━━━")
+
+                requests.post(
+                    f"https://api.telegram.org/bot{T_TOKEN}/sendMessage",
+                    json={"chat_id": C_ID, "text": txt, "parse_mode": "Markdown"},
+                    timeout=7
+                )
+
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "ok"}).encode())
+
+            except:
+                self.send_response(500)
+                self.end_headers()
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    with socketserver.TCPServer(("0.0.0.0", port), MyHandler) as httpd:
-        print(f"Сервер пашет на порту {port}")
-        httpd.serve_forever()
+    p = int(os.environ.get("PORT", 8080))
+    with socketserver.TCPServer(("0.0.0.0", p), Handler) as srv:
+        print(f"init srv:{p}")
+        srv.serve_forever()
